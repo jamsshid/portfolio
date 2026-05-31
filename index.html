@@ -374,6 +374,40 @@
       margin: 0 auto;
       animation: float 6s ease-in-out infinite;
     }
+    .hero__svg-wrap.dragging { animation-play-state: paused; }
+    .hero__svg-wrap svg {
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .hero__svg-wrap.dragging svg { cursor: grabbing; }
+
+    .drag-hint {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--ink-100);
+      box-shadow: var(--shadow-soft);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--ink-500);
+      pointer-events: none;
+      opacity: 0.9;
+      transition: opacity .4s ease;
+    }
+    .hero__svg-wrap.interacted .drag-hint { opacity: 0; }
+    .drag-hint .icon { color: var(--brand-600); width: 12px; height: 12px; }
+
     @keyframes float {
       0%, 100% { transform: translateY(0); }
       50%      { transform: translateY(-8px); }
@@ -977,8 +1011,8 @@
         </div>
 
         <div class="hero__visual reveal">
-          <div class="hero__svg-wrap">
-            <svg viewBox="0 0 400 400" width="100%" height="100%">
+          <div class="hero__svg-wrap" id="svg-wrap">
+            <svg viewBox="0 0 400 400" width="100%" height="100%" id="hero-svg">
               <defs>
                 <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%"  stop-color="#2563EB" stop-opacity="0.95"/>
@@ -986,66 +1020,80 @@
                 </linearGradient>
               </defs>
 
-              <!-- Concentric circles -->
-              <circle cx="200" cy="200" r="170" fill="none" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4 6"/>
-              <circle cx="200" cy="200" r="130" fill="none" stroke="#E2E8F0" stroke-width="1"/>
-              <circle cx="200" cy="200" r="90"  fill="none" stroke="#CBD5E1" stroke-width="1"/>
+              <!-- ROTATABLE GROUP: rings, lines, nodes, dots -->
+              <g id="rotator">
+                <!-- Concentric circles -->
+                <circle cx="200" cy="200" r="170" fill="none" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4 6"/>
+                <circle cx="200" cy="200" r="130" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+                <circle cx="200" cy="200" r="90"  fill="none" stroke="#CBD5E1" stroke-width="1"/>
 
-              <!-- Connection lines -->
-              <g stroke="#2563EB" stroke-width="1.5" opacity="0.35">
-                <line x1="200" y1="200" x2="60"  y2="120"/>
-                <line x1="200" y1="200" x2="340" y2="110"/>
-                <line x1="200" y1="200" x2="80"  y2="300"/>
-                <line x1="200" y1="200" x2="320" y2="300"/>
-                <line x1="200" y1="200" x2="200" y2="40"/>
+                <!-- Connection lines -->
+                <g stroke="#2563EB" stroke-width="1.5" opacity="0.35">
+                  <line x1="200" y1="200" x2="60"  y2="120"/>
+                  <line x1="200" y1="200" x2="340" y2="110"/>
+                  <line x1="200" y1="200" x2="80"  y2="300"/>
+                  <line x1="200" y1="200" x2="320" y2="300"/>
+                  <line x1="200" y1="200" x2="200" y2="40"/>
+                </g>
+
+                <!-- Outer nodes (each wrapped in counter-rot group so labels stay upright) -->
+                <g class="counter-rot" data-cx="200" data-cy="40">
+                  <g transform="translate(170 18)">
+                    <rect width="60" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
+                    <text x="30" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#2563EB" font-weight="600">API</text>
+                    <text x="30" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">/v1</text>
+                  </g>
+                </g>
+                <g class="counter-rot" data-cx="58" data-cy="118">
+                  <g transform="translate(20 96)">
+                    <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
+                    <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">JWT</text>
+                    <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">auth</text>
+                  </g>
+                </g>
+                <g class="counter-rot" data-cx="342" data-cy="110">
+                  <g transform="translate(304 88)">
+                    <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
+                    <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">PostgreSQL</text>
+                    <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">database</text>
+                  </g>
+                </g>
+                <g class="counter-rot" data-cx="78" data-cy="300">
+                  <g transform="translate(40 278)">
+                    <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
+                    <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">Docker</text>
+                    <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">container</text>
+                  </g>
+                </g>
+                <g class="counter-rot" data-cx="322" data-cy="300">
+                  <g transform="translate(284 278)">
+                    <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
+                    <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">Redis</text>
+                    <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">cache</text>
+                  </g>
+                </g>
+
+                <!-- Floating dots on outer ring -->
+                <circle cx="200" cy="30"  r="3" fill="#2563EB"/>
+                <circle cx="370" cy="200" r="3" fill="#2563EB"/>
+                <circle cx="30"  cy="200" r="3" fill="#2563EB"/>
+                <circle cx="200" cy="370" r="3" fill="#2563EB"/>
               </g>
 
-              <!-- Outer nodes -->
-              <g>
-                <g transform="translate(170 18)">
-                  <rect width="60" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
-                  <text x="30" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#2563EB" font-weight="600">API</text>
-                  <text x="30" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">/v1</text>
-                </g>
-                <g transform="translate(20 96)">
-                  <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
-                  <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">JWT</text>
-                  <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">auth</text>
-                </g>
-                <g transform="translate(304 88)">
-                  <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
-                  <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">PostgreSQL</text>
-                  <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">database</text>
-                </g>
-                <g transform="translate(40 278)">
-                  <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
-                  <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">Docker</text>
-                  <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">container</text>
-                </g>
-                <g transform="translate(284 278)">
-                  <rect width="76" height="44" rx="8" fill="white" stroke="#E2E8F0"/>
-                  <text x="38" y="20" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#0A0F1C" font-weight="600">Redis</text>
-                  <text x="38" y="34" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748B">cache</text>
-                </g>
-              </g>
-
-              <!-- Pulse ring -->
+              <!-- STATIC: pulse ring + Django center (no rotation) -->
               <circle cx="200" cy="200" r="56" fill="none" stroke="#2563EB" stroke-width="1.5" class="pulse-ring"/>
-
-              <!-- Center: Django -->
               <g>
                 <circle cx="200" cy="200" r="50" fill="url(#g1)"/>
                 <circle cx="200" cy="200" r="50" fill="none" stroke="#1D4FD7" stroke-width="1.5"/>
                 <text x="200" y="195" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="14" fill="white" font-weight="700">Django</text>
                 <text x="200" y="212" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#DBE5FF">+ DRF</text>
               </g>
-
-              <!-- Floating dots -->
-              <circle cx="200" cy="30"  r="3" fill="#2563EB"/>
-              <circle cx="370" cy="200" r="3" fill="#2563EB"/>
-              <circle cx="30"  cy="200" r="3" fill="#2563EB"/>
-              <circle cx="200" cy="370" r="3" fill="#2563EB"/>
             </svg>
+
+            <div class="drag-hint">
+              <i data-lucide="move" class="icon"></i>
+              Drag to rotate
+            </div>
           </div>
         </div>
       </div>
@@ -1412,11 +1460,91 @@
       );
     }
 
+    function initRotator() {
+      const wrap = document.getElementById('svg-wrap');
+      const svg  = document.getElementById('hero-svg');
+      const rotator = document.getElementById('rotator');
+      if (!wrap || !svg || !rotator) return;
+
+      const counters = Array.from(svg.querySelectorAll('.counter-rot'));
+      const CENTER = 200;
+      const AUTO_SPEED = 0.008; // degrees per ms (~8°/sec → full revolution in 45s)
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      let rotation = 0;
+      let startAngle = 0;
+      let startRotation = 0;
+      let dragging = false;
+      let pointerId = null;
+      let lastTime = 0;
+
+      function angleFromEvent(e) {
+        const rect = svg.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        return Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+      }
+
+      function applyRotation() {
+        rotator.setAttribute('transform', `rotate(${rotation} ${CENTER} ${CENTER})`);
+        counters.forEach(node => {
+          const cx = node.dataset.cx;
+          const cy = node.dataset.cy;
+          node.setAttribute('transform', `rotate(${-rotation} ${cx} ${cy})`);
+        });
+      }
+
+      // Initial positioning
+      applyRotation();
+
+      // Continuous auto-rotation loop (paused while dragging)
+      function tick(now) {
+        if (!lastTime) lastTime = now;
+        const dt = now - lastTime;
+        lastTime = now;
+        if (!dragging && !prefersReducedMotion) {
+          rotation = (rotation + AUTO_SPEED * dt) % 360;
+          applyRotation();
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      svg.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        pointerId = e.pointerId;
+        svg.setPointerCapture(pointerId);
+        startAngle = angleFromEvent(e);
+        startRotation = rotation;
+        wrap.classList.add('dragging', 'interacted');
+        e.preventDefault();
+      });
+
+      svg.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const a = angleFromEvent(e);
+        rotation = startRotation + (a - startAngle);
+        applyRotation();
+      });
+
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        try { svg.releasePointerCapture(pointerId); } catch (_) {}
+        pointerId = null;
+        wrap.classList.remove('dragging');
+      }
+      svg.addEventListener('pointerup', endDrag);
+      svg.addEventListener('pointercancel', endDrag);
+      svg.addEventListener('pointerleave', endDrag);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       renderSkills();
       initLucide();
       initReveal();
       initMenu();
+      initRotator();
     });
   </script>
 </body>
